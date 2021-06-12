@@ -1,3 +1,7 @@
+# Tener en cuenta
+
+Esta proyecto trabaja en conjunto con el repositorio socket_mapas_server ( https://github.com/HenryVelasquezDev/socket_mapas_server )
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
