@@ -22,8 +22,8 @@ export const useMapbox = (puntoInicial) => {
     const marcadores = useRef({});
 
     //Observables de RXJS
-    const movimientoMarcador = useRef( new Subject() );
-    const nuevoMarcador = useRef( new Subject() );
+    const movimientoMarcador = useRef(new Subject());
+    const nuevoMarcador = useRef(new Subject());
 
 
     //mapa y coords
@@ -32,12 +32,12 @@ export const useMapbox = (puntoInicial) => {
 
 
     //funcion para agregar marcadores
-    const agregarMarcador = useCallback((ev) => {
+    const agregarMarcador = useCallback((ev, id) => {
 
-        const { lng, lat } = ev.lngLat;
+        const { lng, lat } = ev.lngLat || ev;
 
         const marker = new mapboxgl.Marker();
-        marker.id = v4();
+        marker.id = id ?? v4();
 
         marker
             .setLngLat([lng, lat])
@@ -47,14 +47,16 @@ export const useMapbox = (puntoInicial) => {
         // Asignamos el objeto de marcadores
         marcadores.current[marker.id] = marker;
 
-        nuevoMarcador.current.next({
-            id: marker.id,
-            lng,
-            lat
-        })
+        if (!id) {
+            nuevoMarcador.current.next({
+                id: marker.id,
+                lng,
+                lat
+            })
+        }
 
         //escuchar movimientos del marcador
-        marker.on('drag', ( { target } ) => {
+        marker.on('drag', ({ target }) => {
             const { id } = target;
             const { lng, lat } = target.getLngLat();
 
@@ -66,7 +68,15 @@ export const useMapbox = (puntoInicial) => {
 
         })
 
-    }, [])
+    }, []);
+
+
+    //funcion para actualizar la ubicacion del marcador
+    const actualizarPosicion = useCallback(( marcador ) => {
+        const { id, lat, lng } = marcador;
+        marcadores.current[ id ].setLngLat( [ lng, lat ] );
+
+    }, []);
 
     useEffect(() => {
 
@@ -106,15 +116,16 @@ export const useMapbox = (puntoInicial) => {
     //Agregar marcadores en mapa al hacer click
     useEffect(() => {
 
-        mapa.current?.on('click', agregarMarcador );
+        mapa.current?.on('click', agregarMarcador);
 
     }, [agregarMarcador])
 
     return {
         agregarMarcador,
+        actualizarPosicion,
         coords,
         marcadores,
-        nuevoMarcador$: nuevoMarcador.current,  
+        nuevoMarcador$: nuevoMarcador.current,
         movimientoMarcador$: movimientoMarcador.current,
         setRef
 
